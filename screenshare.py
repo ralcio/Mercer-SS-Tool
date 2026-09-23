@@ -5,7 +5,6 @@ import json
 import re
 from pathlib import Path
 from zipfile import ZipFile
-from datetime import datetime
 
 RESET = "\033[0m"
 WHITE = "\033[97m"
@@ -64,14 +63,22 @@ def find_minecraft():
 
     if os.name == "nt":
         appdata = os.getenv("APPDATA")
+
         if appdata:
-            candidates.append(Path(appdata) / ".minecraft")
+            candidates.append(
+                Path(appdata) / ".minecraft"
+            )
+
     elif platform.system() == "Darwin":
         candidates.append(
-            Path.home() / "Library/Application Support/minecraft"
+            Path.home() /
+            "Library/Application Support/minecraft"
         )
+
     else:
-        candidates.append(Path.home() / ".minecraft")
+        candidates.append(
+            Path.home() / ".minecraft"
+        )
 
     for path in candidates:
         if path.exists():
@@ -86,9 +93,13 @@ def find_jars(folder, recursive=False):
 
     try:
         if recursive:
-            return list(folder.rglob("*.jar"))
+            return list(
+                folder.rglob("*.jar")
+            )
 
-        return list(folder.glob("*.jar"))
+        return list(
+            folder.glob("*.jar")
+        )
 
     except (PermissionError, OSError):
         return []
@@ -106,24 +117,34 @@ def read_mod_info(jar_path):
 
     try:
         with ZipFile(jar_path, "r") as jar:
-            names = set(jar.namelist())
+            names = set(
+                jar.namelist()
+            )
 
             if "fabric.mod.json" in names:
                 data = json.loads(
-                    jar.read("fabric.mod.json").decode(
+                    jar.read(
+                        "fabric.mod.json"
+                    ).decode(
                         "utf-8",
                         errors="replace"
                     )
                 )
 
                 result["loader"] = "Fabric"
-                result["id"] = str(data.get("id", ""))
+
+                result["id"] = str(
+                    data.get("id", "")
+                )
+
                 result["name"] = str(
                     data.get(
                         "name",
-                        result["id"] or jar_path.stem
+                        result["id"]
+                        or jar_path.stem
                     )
                 )
+
                 result["version"] = str(
                     data.get("version", "")
                 )
@@ -154,14 +175,23 @@ def read_mod_info(jar_path):
                 )
 
                 if mod_id:
-                    result["id"] = mod_id.group(1)
-                    result["name"] = result["id"]
+                    result["id"] = (
+                        mod_id.group(1)
+                    )
+
+                    result["name"] = (
+                        result["id"]
+                    )
 
                 if version:
-                    result["version"] = version.group(1)
+                    result["version"] = (
+                        version.group(1)
+                    )
 
                 if display:
-                    result["name"] = display.group(1)
+                    result["name"] = (
+                        display.group(1)
+                    )
 
     except Exception:
         pass
@@ -172,8 +202,12 @@ def read_mod_info(jar_path):
 def scan_mod_folder(mods_folder):
     mods = []
 
-    for jar in find_jars(mods_folder):
-        mods.append(read_mod_info(jar))
+    for jar in find_jars(
+        mods_folder
+    ):
+        mods.append(
+            read_mod_info(jar)
+        )
 
     return mods
 
@@ -185,25 +219,41 @@ def detect_loader(minecraft):
     detected = []
 
     checks = {
-        "Fabric": minecraft / "fabric-loader",
-        "Forge": minecraft / "libraries/net/minecraftforge",
-        "NeoForge": minecraft / "libraries/net/neoforged",
-        "Quilt": minecraft / "quilt-loader",
+        "Fabric": (
+            minecraft / "fabric-loader"
+        ),
+        "Forge": (
+            minecraft /
+            "libraries/net/minecraftforge"
+        ),
+        "NeoForge": (
+            minecraft /
+            "libraries/net/neoforged"
+        ),
+        "Quilt": (
+            minecraft / "quilt-loader"
+        ),
     }
 
     for name, path in checks.items():
         if path.exists():
             detected.append(name)
 
-    if (minecraft / "mods").exists():
-        for jar in find_jars(minecraft / "mods"):
+    mods_folder = minecraft / "mods"
+
+    if mods_folder.exists():
+        for jar in find_jars(
+            mods_folder
+        ):
             info = read_mod_info(jar)
 
             if (
                 info["loader"] not in detected
                 and info["loader"] != "Unknown"
             ):
-                detected.append(info["loader"])
+                detected.append(
+                    info["loader"]
+                )
 
     return detected
 
@@ -212,7 +262,9 @@ def get_versions(minecraft):
     if not minecraft:
         return []
 
-    versions = minecraft / "versions"
+    versions = (
+        minecraft / "versions"
+    )
 
     if not versions.exists():
         return []
@@ -227,7 +279,10 @@ def get_versions(minecraft):
             key=str.lower
         )
 
-    except (PermissionError, OSError):
+    except (
+        PermissionError,
+        OSError
+    ):
         return []
 
 
@@ -247,33 +302,24 @@ def detect_clients():
     return found
 
 
-def get_client_jars(client_paths):
-    result = []
-
-    for path_text in client_paths:
-        path = Path(path_text)
-
-        if not path.exists():
-            continue
-
-        for jar in find_jars(
-            path,
-            recursive=True
-        ):
-            result.append(str(jar))
-
-    return result[:1000]
-
-
 def scan_instances():
     home = Path.home()
 
     locations = [
-        home / "AppData/Roaming/PrismLauncher/instances",
-        home / "AppData/Roaming/ModrinthApp/profiles",
-        home / "AppData/Roaming/com.modrinth.theseus/profiles",
-        home / "Documents/CurseForge/Minecraft/Instances",
-        home / "AppData/Roaming/CurseForge/Minecraft/Instances",
+        home /
+        "AppData/Roaming/PrismLauncher/instances",
+
+        home /
+        "AppData/Roaming/ModrinthApp/profiles",
+
+        home /
+        "AppData/Roaming/com.modrinth.theseus/profiles",
+
+        home /
+        "Documents/CurseForge/Minecraft/Instances",
+
+        home /
+        "AppData/Roaming/CurseForge/Minecraft/Instances",
     ]
 
     return [
@@ -289,8 +335,11 @@ def detect_instances():
     for base in scan_instances():
         try:
             for instance in base.iterdir():
+
                 if instance.is_dir():
-                    mods = instance / "mods"
+                    mods = (
+                        instance / "mods"
+                    )
 
                     data.append({
                         "instance": instance.name,
@@ -300,7 +349,10 @@ def detect_instances():
                         ),
                     })
 
-        except (PermissionError, OSError):
+        except (
+            PermissionError,
+            OSError
+        ):
             pass
 
     return data
@@ -310,7 +362,10 @@ def get_launcher_profiles(minecraft):
     if not minecraft:
         return []
 
-    file = minecraft / "launcher_profiles.json"
+    file = (
+        minecraft /
+        "launcher_profiles.json"
+    )
 
     if not file.exists():
         return []
@@ -382,10 +437,18 @@ def get_java_details():
         result["installed"] = True
 
         patterns = {
-            "version": r"java\.version\s*=\s*(.+)",
-            "vendor": r"java\.vendor\s*=\s*(.+)",
-            "arch": r"os\.arch\s*=\s*(.+)",
-            "home": r"java\.home\s*=\s*(.+)",
+            "version": (
+                r"java\.version\s*=\s*(.+)"
+            ),
+            "vendor": (
+                r"java\.vendor\s*=\s*(.+)"
+            ),
+            "arch": (
+                r"os\.arch\s*=\s*(.+)"
+            ),
+            "home": (
+                r"java\.home\s*=\s*(.+)"
+            ),
         }
 
         for key, pattern in patterns.items():
@@ -395,7 +458,9 @@ def get_java_details():
             )
 
             if match:
-                result[key] = match.group(1).strip()
+                result[key] = (
+                    match.group(1).strip()
+                )
 
     except (
         FileNotFoundError,
@@ -423,250 +488,46 @@ def folder_statistics(minecraft):
     result = {}
 
     for folder_name in folders:
-        folder = minecraft / folder_name
+
+        folder = (
+            minecraft /
+            folder_name
+        )
+
         files = 0
         total_size = 0
 
         if folder.exists():
             try:
                 for item in folder.rglob("*"):
+
                     if item.is_file():
                         files += 1
 
                         try:
-                            total_size += item.stat().st_size
+                            total_size += (
+                                item.stat().st_size
+                            )
 
                         except OSError:
                             pass
 
             except (
                 PermissionError,
-                OSError,
+                OSError
             ):
                 pass
 
         result[folder_name] = {
             "files": files,
             "size_mb": round(
-                total_size / (1024 * 1024),
+                total_size /
+                (1024 * 1024),
                 2,
             ),
         }
 
     return result
-
-
-def get_system_info():
-    return {
-        "os": platform.system(),
-        "os_version": platform.version(),
-        "architecture": platform.machine(),
-        "python": platform.python_version(),
-    }
-
-
-def create_json_report(report):
-    report_path = (
-        Path.cwd() /
-        "screenshare_report.json"
-    )
-
-    with report_path.open(
-        "w",
-        encoding="utf-8"
-    ) as file:
-        json.dump(
-            report,
-            file,
-            indent=4,
-            ensure_ascii=False,
-        )
-
-    return report_path
-
-
-def create_txt_report(report):
-    report_path = (
-        Path.cwd() /
-        "screenshare_report.txt"
-    )
-
-    lines = []
-
-    lines.append(
-        "MINECRAFT SCREENSHARE REPORT"
-    )
-
-    lines.append("=" * 60)
-
-    lines.append(
-        f"Created: {report['created_at']}"
-    )
-
-    lines.append("")
-
-    lines.append("SYSTEM")
-    lines.append("-" * 60)
-
-    for key, value in report[
-        "system"
-    ].items():
-
-        lines.append(
-            f"{key}: {value}"
-        )
-
-    lines.append("")
-
-    lines.append("MINECRAFT")
-    lines.append("-" * 60)
-
-    lines.append(
-        f"Path: {report['minecraft']['path']}"
-    )
-
-    lines.append(
-        "Loaders: "
-        + (
-            ", ".join(
-                report["minecraft"]["loaders"]
-            )
-            or "None"
-        )
-    )
-
-    lines.append(
-        "Versions: "
-        + (
-            ", ".join(
-                report["minecraft"]["versions"]
-            )
-            or "None"
-        )
-    )
-
-    lines.append("")
-
-    lines.append("MODS")
-    lines.append("-" * 60)
-
-    for mod in report["mods"]:
-        lines.append(
-            f"{mod['name']} | "
-            f"ID: {mod['id']} | "
-            f"Version: {mod['version']} | "
-            f"Loader: {mod['loader']} | "
-            f"File: {mod['file']}"
-        )
-
-    lines.append("")
-
-    lines.append("CLIENTS")
-    lines.append("-" * 60)
-
-    for client, client_paths in report[
-        "clients"
-    ].items():
-
-        lines.append(client)
-
-        for client_path in client_paths:
-            lines.append(
-                f"  {client_path}"
-            )
-
-    lines.append("")
-
-    lines.append("INSTANCES")
-    lines.append("-" * 60)
-
-    for instance in report[
-        "instances"
-    ]:
-
-        lines.append(
-            f"{instance['instance']} | "
-            f"Mods: {instance['mods']} | "
-            f"Path: {instance['path']}"
-        )
-
-    lines.append("")
-
-    lines.append(
-        "LAUNCHER PROFILES"
-    )
-
-    lines.append("-" * 60)
-
-    for profile in report[
-        "launcher_profiles"
-    ]:
-
-        lines.append(
-            f"{profile['name']} | "
-            f"Version: {profile['lastVersionId']} | "
-            f"Type: {profile['type']}"
-        )
-
-    lines.append("")
-
-    lines.append("JAVA")
-    lines.append("-" * 60)
-
-    for key, value in report[
-        "java"
-    ].items():
-
-        lines.append(
-            f"{key}: {value}"
-        )
-
-    lines.append("")
-
-    lines.append(
-        "MINECRAFT FOLDER STATISTICS"
-    )
-
-    lines.append("-" * 60)
-
-    for folder, stats in report[
-        "folder_statistics"
-    ].items():
-
-        lines.append(
-            f"{folder}: "
-            f"{stats['files']} files | "
-            f"{stats['size_mb']} MB"
-        )
-
-    lines.append("")
-
-    lines.append("SUMMARY")
-    lines.append("-" * 60)
-
-    lines.append(
-        f"Mods: {len(report['mods'])}"
-    )
-
-    lines.append(
-        f"Clients: {len(report['clients'])}"
-    )
-
-    lines.append(
-        f"Instances: {len(report['instances'])}"
-    )
-
-    lines.append(
-        "Launcher profiles: "
-        f"{len(report['launcher_profiles'])}"
-    )
-
-    report_path.write_text(
-        "\n".join(lines),
-        encoding="utf-8",
-    )
-
-    return report_path
 
 
 def main():
@@ -695,6 +556,7 @@ def main():
     minecraft = find_minecraft()
 
     if not minecraft:
+
         print(
             WHITE +
             "Minecraft was not found." +
@@ -707,7 +569,9 @@ def main():
 
         return
 
-    mods_folder = minecraft / "mods"
+    mods_folder = (
+        minecraft / "mods"
+    )
 
     mods = scan_mod_folder(
         mods_folder
@@ -717,8 +581,10 @@ def main():
 
     instances = detect_instances()
 
-    launcher_profiles = get_launcher_profiles(
-        minecraft
+    launcher_profiles = (
+        get_launcher_profiles(
+            minecraft
+        )
     )
 
     java = get_java_details()
@@ -734,27 +600,6 @@ def main():
     versions = get_versions(
         minecraft
     )
-
-    report = {
-        "created_at": datetime.now().isoformat(
-            timespec="seconds"
-        ),
-
-        "system": get_system_info(),
-
-        "minecraft": {
-            "path": str(minecraft),
-            "loaders": loaders,
-            "versions": versions,
-        },
-
-        "mods": mods,
-        "clients": clients,
-        "instances": instances,
-        "launcher_profiles": launcher_profiles,
-        "java": java,
-        "folder_statistics": stats,
-    }
 
     print(
         WHITE +
@@ -788,7 +633,9 @@ def main():
     )
 
     if mods:
+
         for mod in mods:
+
             version = (
                 mod["version"]
                 or "?"
@@ -801,6 +648,7 @@ def main():
             )
 
     else:
+
         print(
             "No .jar mods found."
         )
@@ -814,6 +662,7 @@ def main():
     )
 
     if clients:
+
         for client, client_paths in clients.items():
 
             print(
@@ -821,11 +670,13 @@ def main():
             )
 
             for client_path in client_paths:
+
                 print(
                     f"  {client_path}"
                 )
 
     else:
+
         print(
             "No known clients found."
         )
@@ -839,6 +690,7 @@ def main():
     )
 
     if instances:
+
         for instance in instances:
 
             print(
@@ -847,6 +699,7 @@ def main():
             )
 
     else:
+
         print(
             "No known instances found."
         )
@@ -860,6 +713,7 @@ def main():
     )
 
     if launcher_profiles:
+
         for profile in launcher_profiles:
 
             print(
@@ -869,6 +723,7 @@ def main():
             )
 
     else:
+
         print(
             "No launcher profiles found."
         )
@@ -884,22 +739,27 @@ def main():
     if java["installed"]:
 
         print(
-            f"Version: {java['version'] or '?'}"
+            f"Version: "
+            f"{java['version'] or '?'}"
         )
 
         print(
-            f"Vendor: {java['vendor'] or '?'}"
+            f"Vendor: "
+            f"{java['vendor'] or '?'}"
         )
 
         print(
-            f"Arch: {java['arch'] or '?'}"
+            f"Arch: "
+            f"{java['arch'] or '?'}"
         )
 
         print(
-            f"Home: {java['home'] or '?'}"
+            f"Home: "
+            f"{java['home'] or '?'}"
         )
 
     else:
+
         print(
             "Java was not found."
         )
@@ -943,30 +803,6 @@ def main():
     print(
         "Launcher profiles: "
         f"{len(launcher_profiles)}"
-    )
-
-    print()
-
-    json_path = create_json_report(
-        report
-    )
-
-    txt_path = create_txt_report(
-        report
-    )
-
-    print(
-        WHITE +
-        "[ REPORTS ]" +
-        RESET
-    )
-
-    print(
-        f"JSON: {json_path}"
-    )
-
-    print(
-        f"TXT : {txt_path}"
     )
 
     print()
