@@ -67,7 +67,9 @@ def find_minecraft():
         if appdata:
             candidates.append(Path(appdata) / ".minecraft")
     elif platform.system() == "Darwin":
-        candidates.append(Path.home() / "Library/Application Support/minecraft")
+        candidates.append(
+            Path.home() / "Library/Application Support/minecraft"
+        )
     else:
         candidates.append(Path.home() / ".minecraft")
 
@@ -85,7 +87,9 @@ def find_jars(folder, recursive=False):
     try:
         if recursive:
             return list(folder.rglob("*.jar"))
+
         return list(folder.glob("*.jar"))
+
     except (PermissionError, OSError):
         return []
 
@@ -107,20 +111,29 @@ def read_mod_info(jar_path):
             if "fabric.mod.json" in names:
                 data = json.loads(
                     jar.read("fabric.mod.json").decode(
-                        "utf-8", errors="replace"
+                        "utf-8",
+                        errors="replace"
                     )
                 )
 
                 result["loader"] = "Fabric"
                 result["id"] = str(data.get("id", ""))
                 result["name"] = str(
-                    data.get("name", result["id"] or jar_path.stem)
+                    data.get(
+                        "name",
+                        result["id"] or jar_path.stem
+                    )
                 )
-                result["version"] = str(data.get("version", ""))
+                result["version"] = str(
+                    data.get("version", "")
+                )
 
             elif "META-INF/mods.toml" in names:
-                text = jar.read("META-INF/mods.toml").decode(
-                    "utf-8", errors="replace"
+                text = jar.read(
+                    "META-INF/mods.toml"
+                ).decode(
+                    "utf-8",
+                    errors="replace"
                 )
 
                 result["loader"] = "Forge/NeoForge"
@@ -129,10 +142,12 @@ def read_mod_info(jar_path):
                     r'modId\s*=\s*"([^"]+)"',
                     text
                 )
+
                 version = re.search(
                     r'version\s*=\s*"([^"]+)"',
                     text
                 )
+
                 display = re.search(
                     r'displayName\s*=\s*"([^"]+)"',
                     text
@@ -211,6 +226,7 @@ def get_versions(minecraft):
             ],
             key=str.lower
         )
+
     except (PermissionError, OSError):
         return []
 
@@ -240,7 +256,10 @@ def get_client_jars(client_paths):
         if not path.exists():
             continue
 
-        for jar in find_jars(path, recursive=True):
+        for jar in find_jars(
+            path,
+            recursive=True
+        ):
             result.append(str(jar))
 
     return result[:1000]
@@ -276,7 +295,9 @@ def detect_instances():
                     data.append({
                         "instance": instance.name,
                         "path": str(instance),
-                        "mods": len(find_jars(mods)),
+                        "mods": len(
+                            find_jars(mods)
+                        ),
                     })
 
         except (PermissionError, OSError):
@@ -301,6 +322,7 @@ def get_launcher_profiles(minecraft):
                 errors="replace"
             )
         )
+
     except Exception:
         return []
 
@@ -313,7 +335,10 @@ def get_launcher_profiles(minecraft):
 
         profiles.append({
             "id": profile_id,
-            "name": profile.get("name", ""),
+            "name": profile.get(
+                "name",
+                ""
+            ),
             "lastVersionId": profile.get(
                 "lastVersionId",
                 ""
@@ -410,6 +435,7 @@ def folder_statistics(minecraft):
 
                         try:
                             total_size += item.stat().st_size
+
                         except OSError:
                             pass
 
@@ -470,10 +496,13 @@ def create_txt_report(report):
     lines.append(
         "MINECRAFT SCREENSHARE REPORT"
     )
+
     lines.append("=" * 60)
+
     lines.append(
         f"Created: {report['created_at']}"
     )
+
     lines.append("")
 
     lines.append("SYSTEM")
@@ -482,6 +511,7 @@ def create_txt_report(report):
     for key, value in report[
         "system"
     ].items():
+
         lines.append(
             f"{key}: {value}"
         )
@@ -553,6 +583,7 @@ def create_txt_report(report):
     for instance in report[
         "instances"
     ]:
+
         lines.append(
             f"{instance['instance']} | "
             f"Mods: {instance['mods']} | "
@@ -564,11 +595,13 @@ def create_txt_report(report):
     lines.append(
         "LAUNCHER PROFILES"
     )
+
     lines.append("-" * 60)
 
     for profile in report[
         "launcher_profiles"
     ]:
+
         lines.append(
             f"{profile['name']} | "
             f"Version: {profile['lastVersionId']} | "
@@ -583,6 +616,7 @@ def create_txt_report(report):
     for key, value in report[
         "java"
     ].items():
+
         lines.append(
             f"{key}: {value}"
         )
@@ -592,6 +626,7 @@ def create_txt_report(report):
     lines.append(
         "MINECRAFT FOLDER STATISTICS"
     )
+
     lines.append("-" * 60)
 
     for folder, stats in report[
@@ -662,12 +697,12 @@ def main():
     if not minecraft:
         print(
             WHITE +
-            "Minecraft wurde nicht gefunden." +
+            "Minecraft was not found." +
             RESET
         )
 
         input(
-            "\nEnter zum Beenden..."
+            "\nPress Enter to exit..."
         )
 
         return
@@ -679,12 +714,15 @@ def main():
     )
 
     clients = detect_clients()
+
     instances = detect_instances()
+
     launcher_profiles = get_launcher_profiles(
         minecraft
     )
 
     java = get_java_details()
+
     stats = folder_statistics(
         minecraft
     )
@@ -764,7 +802,7 @@ def main():
 
     else:
         print(
-            "Keine .jar Mods gefunden."
+            "No .jar mods found."
         )
 
     print()
@@ -777,6 +815,7 @@ def main():
 
     if clients:
         for client, client_paths in clients.items():
+
             print(
                 f"- {client}"
             )
@@ -788,7 +827,7 @@ def main():
 
     else:
         print(
-            "Keine bekannten Clients gefunden."
+            "No known clients found."
         )
 
     print()
@@ -801,6 +840,7 @@ def main():
 
     if instances:
         for instance in instances:
+
             print(
                 f"- {instance['instance']} | "
                 f"{instance['mods']} Mods"
@@ -808,19 +848,20 @@ def main():
 
     else:
         print(
-            "Keine bekannten Instanzen gefunden."
+            "No known instances found."
         )
 
     print()
 
     print(
         WHITE +
-        "[ LAUNCHER PROFILE ]" +
+        "[ LAUNCHER PROFILES ]" +
         RESET
     )
 
     if launcher_profiles:
         for profile in launcher_profiles:
+
             print(
                 f"- {profile['name']} | "
                 f"{profile['lastVersionId']} | "
@@ -829,7 +870,7 @@ def main():
 
     else:
         print(
-            "Keine Launcher-Profile gefunden."
+            "No launcher profiles found."
         )
 
     print()
@@ -841,6 +882,7 @@ def main():
     )
 
     if java["installed"]:
+
         print(
             f"Version: {java['version'] or '?'}"
         )
@@ -859,21 +901,22 @@ def main():
 
     else:
         print(
-            "Java wurde nicht gefunden."
+            "Java was not found."
         )
 
     print()
 
     print(
         WHITE +
-        "[ MINECRAFT ORDNER ]" +
+        "[ MINECRAFT FOLDER ]" +
         RESET
     )
 
     for folder, values in stats.items():
+
         print(
             f"- {folder}: "
-            f"{values['files']} Dateien | "
+            f"{values['files']} files | "
             f"{values['size_mb']} MB"
         )
 
@@ -930,12 +973,12 @@ def main():
 
     print(
         WHITE +
-        "Scan abgeschlossen." +
+        "Scan completed successfully." +
         RESET
     )
 
     input(
-        "\nEnter zum Beenden..."
+        "\nPress Enter to exit..."
     )
 
 
